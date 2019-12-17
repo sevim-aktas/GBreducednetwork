@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Dec 12 16:46:05 2019
+
+@author: sevimaktas
+"""
+
+import pandas as pd
+import numpy as np
+import pandapower as pp
+import matplotlib.pyplot as plt
+import geopandas
+import math
+from pandapower.plotting.plotly import simple_plotly
+import pandapower.networks as pn
+
+net = pn.GBreducednetwork()
+pp.runpp(net)
+
+#pp.to_excel(net,'dftest.xlsx')
+
+df1=pd.DataFrame()
+x = range(0,len(net.res_line))
+for line in x:
+    
+    print (line)
+    pp.drop_lines(net,lines=[line])
+
+    try:
+        pp.runpp(net)
+        
+         #get the 3 lines with largest loading percent and list them in df1
+        loading_percent = (net.res_line.loading_percent)
+        loading_percent_max = loading_percent.nlargest(3)
+        df1.at[line,'first_loading_percent_max'] = float(loading_percent_max.iloc[0])
+        df1.at[line,'first_loading_percent_max_index'] = float(loading_percent_max.index[0])
+        df1.at[line,'second_loading_percent_max'] = float(loading_percent_max.iloc[1])
+        df1.at[line,'second_loading_percent_max_index'] = float(loading_percent_max.index[1])
+        df1.at[line,'thrid_loading_percent_max'] = float(loading_percent_max.iloc[2])
+        df1.at[line,'third_loading_percent_max_index'] = float(loading_percent_max.index[2])
+    
+        loading_percent_exceed_100_occurance = sum(i >100 for i in loading_percent)
+        df1.at[line,'loading_percent_exceed_100_occurance'] = float(loading_percent_exceed_100_occurance)
+        
+        
+        loading_percent = (net.res_line.loading_percent)
+        loading_percent_ave = loading_percent.sum()/len(net.res_line.loading_percent)
+        df1.at[line,'loading_percent_ave'] = float(loading_percent_ave)
+        
+     #   loading_percent = (net.res_line.loading_percent)
+     #   loading_percent_max = loading_percent.max()
+     #   df1.at[line,'loading_percent_max'] = float(loading_percent_max)
+        
+      #  loading_percent_max_index = loading_percent.idxmax()
+      #  df1.at[line,'loading_percent_max_index'] = float(loading_percent_max_index)
+        
+        line_power = abs(net.res_line.p_from_mw)
+        line_power_sum = line_power.sum()
+        df1.at[line,'line_power_sum'] = float(line_power_sum)
+        
+        line_power = abs(net.res_line.p_from_mw)
+        line_power_max = line_power.max()
+        df1.at[line,'line_power_max'] = float(line_power_max)
+        
+        volt_magto =(net.res_line.vm_to_pu)
+        volt_magto_max = volt_magto.max()
+        df1.at[line,'volt_magto_max'] = float(volt_magto_max)
+        
+        volt_magfrom =(net.res_line.vm_from_pu)
+        volt_magfrom_max = volt_magfrom.max()
+        df1.at[line,'volt_magfrom_max'] = float(volt_magfrom_max)
+        
+
+    except:
+        error_variable = float("0")
+        df1.at[line,'loading_percent_ave'] = error_variable
+        df1.at[line,'loading_percent_max'] = error_variable  
+        df1.at[line,'line_power_sum'] = error_variable
+        df1.at[line,'line_power_max'] = error_variable
+        df1.at[line,'volt_magto_max'] = error_variable
+        df1.at[line,'volt_magfrom_max'] = error_variable
+         
+    net = pn.GBreducednetwork()
+
+df1.to_csv('Toph_outcomes.csv')
+
+#pp.to_excel(net,'sTophTester1.xlsx')
+
